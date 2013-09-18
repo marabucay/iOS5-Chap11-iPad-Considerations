@@ -34,12 +34,13 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
-    /*self.detailViewController = (BIDDetailViewController *)[[self.splitViewController.viewControllers lastObject] topViewController];
-    [self.tableView selectRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0] animated:NO scrollPosition:UITableViewScrollPositionMiddle];*/
     NSString *path = [[NSBundle mainBundle] pathForResource:@"PresidentList"
                                                      ofType:@"plist"];
     NSDictionary *presidentInfo = [NSDictionary dictionaryWithContentsOfFile:path];
     self.presidents = [presidentInfo objectForKey:@"presidents"];
+    
+    self.detailViewController = (BIDDetailViewController *)[[self.splitViewController.viewControllers lastObject] topViewController];
+    [self.tableView selectRowAtIndexPath:[NSIndexPath indexPathForRow:0 inSection:0] animated:NO scrollPosition:UITableViewScrollPositionMiddle];
 }
 
 - (void)viewDidUnload
