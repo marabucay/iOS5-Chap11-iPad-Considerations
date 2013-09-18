@@ -7,6 +7,7 @@
 //
 
 #import "BIDDetailViewController.h"
+#import "BIDLanguageListController.h"
 
 @interface BIDDetailViewController ()
 @property (strong, nonatomic) UIPopoverController *masterPopoverController;
@@ -20,12 +21,31 @@
 @synthesize masterPopoverController = _masterPopoverController;
 @synthesize webView;
 
+@synthesize languageButton;
+@synthesize languagePopoverController;
+@synthesize languageString;
+
+static NSString * modifyUrlForLanguage(NSString *url, NSString *lang) {
+    if (!lang) {
+        return url;
+    }
+    // We're relying on a particular Wikipedia URL format here. This
+    // is a bit fragile!
+    NSRange languageCodeRange = NSMakeRange(7, 2);
+    if ([[url substringWithRange:languageCodeRange] isEqualToString:lang]) {
+        return url;
+    } else {
+        NSString *newUrl = [url stringByReplacingCharactersInRange:languageCodeRange
+                                                        withString:lang];
+        return newUrl;
+    }
+}
 #pragma mark - Managing the detail item
 
 - (void)setDetailItem:(id)newDetailItem
 {
     if (_detailItem != newDetailItem) {
-        _detailItem = newDetailItem;
+        _detailItem = modifyUrlForLanguage(newDetailItem, languageString);
         
         // Update the view.
         [self configureView];
@@ -60,6 +80,11 @@
 {
     [super viewDidLoad];
 	// Do any additional setup after loading the view, typically from a nib.
+    self.languageButton = [[UIBarButtonItem alloc] init];
+    languageButton.title = @"Choose Language";
+    languageButton.target = self;
+    languageButton.action = @selector(touchLanguageButton);
+    self.navigationItem.rightBarButtonItem = self.languageButton;
     [self configureView];
 }
 
@@ -69,6 +94,8 @@
     // Release any retained subviews of the main view.
     // e.g. self.myOutlet = nil;
     self.webView = nil;
+    self.languageButton = nil;
+    self.languagePopoverController = nil;
 }
 
 - (void)viewWillAppear:(BOOL)animated
@@ -111,6 +138,35 @@
     // Called when the view is shown again in the split view, invalidating the button and popover controller.
     [self.navigationItem setLeftBarButtonItem:nil animated:YES];
     self.masterPopoverController = nil;
+}
+
+- (void)setLanguageString:(NSString *)newString {
+    if (![newString isEqualToString:languageString]) {
+        languageString = [newString copy];
+        self.detailItem = modifyUrlForLanguage(_detailItem, languageString);
+    }
+    if (languagePopoverController != nil) {
+        [languagePopoverController dismissPopoverAnimated:YES];
+        self.languagePopoverController = nil;
+    }
+}
+- (IBAction)touchLanguageButton {
+    if (self.languagePopoverController == nil) {
+        BIDLanguageListController *languageListController =
+        [[BIDLanguageListController alloc] init];
+        languageListController.detailViewController = self;
+        UIPopoverController *poc = [[UIPopoverController alloc]
+                                    initWithContentViewController:languageListController];
+        [poc presentPopoverFromBarButtonItem:languageButton
+                    permittedArrowDirections:UIPopoverArrowDirectionAny
+                                    animated:YES];
+        self.languagePopoverController = poc;
+    } else {
+        if (languagePopoverController != nil) {
+            [languagePopoverController dismissPopoverAnimated:YES];
+            self.languagePopoverController = nil;
+        }
+    }
 }
 
 @end
